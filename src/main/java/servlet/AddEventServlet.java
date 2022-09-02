@@ -1,0 +1,53 @@
+package servlet;
+
+import lombok.SneakyThrows;
+import manager.EventManager;
+import model.Event;
+import model.EventType;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
+@WebServlet(urlPatterns = "/events/add")
+public class AddEventServlet extends HttpServlet {
+
+    private EventManager eventManager = new EventManager();
+    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.getRequestDispatcher("/WEB-INF/addEvent.jsp").forward(req, resp);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String name = req.getParameter("name");
+        String place = req.getParameter("place");
+        boolean isOnline = Boolean.parseBoolean(req.getParameter("isOnline"));
+        EventType eventType = EventType.valueOf(req.getParameter("eventsType"));
+        double price = Double.parseDouble(req.getParameter("price"));
+        String eventDateStr = req.getParameter("eventDate");
+
+        Event event = null;
+        try {
+            event = Event.builder()
+                    .name(name)
+                    .place(place)
+                    .isOnline(isOnline)
+                    .eventType(eventType)
+                    .price(price)
+                    .eventDate(sdf.parse(eventDateStr))
+                    .build();
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+
+        eventManager.add(event);
+        resp.sendRedirect("/events");
+    }
+}
